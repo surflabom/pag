@@ -1,9 +1,9 @@
 package pag
 
 import (
-	"PAG/pkg/alertmanger"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"pag/pkg/alertmanger"
 	"testing"
 	"time"
 )

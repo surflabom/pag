@@ -1,9 +1,9 @@
 package pag
 
 import (
-	"PAG/pkg/grafana"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"pag/pkg/grafana"
 	"testing"
 )
 

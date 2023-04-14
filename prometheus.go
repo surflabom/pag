@@ -1,7 +1,6 @@
 package pag
 
 import (
-	"PAG/pkg/prometheus"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"pag/pkg/prometheus"
 	"strconv"
 	"time"
 )

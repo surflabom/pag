@@ -19,7 +19,7 @@ SDK
 
 func main()  {
 	  // baseURL 是 grafana 服务位置 ,apiKey 是grafana 管理页面 - Configuration - API Keys 所生成的身份验证 Token
-	  apiKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOjF9"
+	  apiKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOj"
 	  baseURL := "http://127.0.0.1:3000"
 	  grafanaClient :=pag.NewGrafanaClient(baseURL, apiKey)
 
