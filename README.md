@@ -6,6 +6,12 @@
 SDK
 
 
+### 安装
+```go
+go get  github.com/surflabom/pag
+```
+
+
 ###   初始化客户端
 
 ***
