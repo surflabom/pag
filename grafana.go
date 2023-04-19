@@ -8,9 +8,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"pag/pkg/grafana"
 	"strconv"
 	"time"
+
+	"github.com/surflabom/pag/pkg/grafana"
 )
 
 type GrafanaClient struct {
@@ -81,7 +82,7 @@ func (g *GrafanaClient) NewReqWithContext(ctx context.Context, method string, ur
 	return json.NewDecoder(resp.Body).Decode(i)
 }
 
-func (g *GrafanaClient) CreateDataSources(ctx context.Context, addDS grafana.AddDataSourceCommand) (grafana.DynMap, error) {
+func (g *GrafanaClient) CreateDataSources(ctx context.Context, addDS grafana.DataSourceAdd) (grafana.DynMap, error) {
 	marshal, _ := json.Marshal(addDS)
 	res := make(grafana.DynMap)
 	err := g.NewReqWithContext(ctx, "POST", g.datasourceEndPoint, bytes.NewBuffer(marshal), res)
@@ -109,7 +110,7 @@ func (g *GrafanaClient) DeleteDataSourceByUID(ctx context.Context, uid string) e
 	return nil
 }
 
-func (g *GrafanaClient) UpdateDataSourceByUID(ctx context.Context, upDS grafana.UpdateDataSourceCommand) (grafana.DynMap, error) {
+func (g *GrafanaClient) UpdateDataSourceByUID(ctx context.Context, upDS grafana.DataSourceUpdate) (grafana.DynMap, error) {
 	var dm grafana.DynMap
 	marshal, _ := json.Marshal(upDS)
 	err := g.NewReqWithContext(ctx, "PUT", g.datasourceEndPoint+"/uid/"+upDS.UID, bytes.NewBuffer(marshal), &dm)

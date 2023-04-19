@@ -292,7 +292,8 @@ type DataSource struct {
 //	return []string{}
 //}
 
-// Specific error type for grpc secrets management so that we can show more detailed plugin errors to users
+// ErrDatasourceSecretsPluginUserFriendly Specific error type for grpc secrets management so that we can show more
+// detailed plugin errors to users
 type ErrDatasourceSecretsPluginUserFriendly struct {
 	Err string
 }
@@ -305,7 +306,7 @@ func (e ErrDatasourceSecretsPluginUserFriendly) Error() string {
 // COMMANDS
 
 // Also acts as api DTO
-type AddDataSourceCommand struct {
+type DataSourceAdd struct {
 	Name            string            `json:"name" binding:"Required"`
 	Type            string            `json:"type" binding:"Required"`
 	Access          DsAccess          `json:"access" binding:"Required"`
@@ -328,7 +329,7 @@ type AddDataSourceCommand struct {
 }
 
 // Also acts as api DTO
-type UpdateDataSourceCommand struct {
+type DataSourceUpdate struct {
 	Name            string            `json:"name" binding:"Required"`
 	Type            string            `json:"type" binding:"Required"`
 	Access          DsAccess          `json:"access" binding:"Required"`
@@ -351,21 +352,18 @@ type UpdateDataSourceCommand struct {
 	UpdateSecretFn          UpdateSecretFn    `json:"-"`
 }
 
-// DeleteDataSourceCommand will delete a DataSource based on OrgID as well as the UID (preferred), ID, or Name.
+// DataSourceDelete will delete a DataSource based on OrgID as well as the UID (preferred), ID, or Name.
 // At least one of the UID, ID, or Name properties must be set in addition to OrgID.
-type DeleteDataSourceCommand struct {
-	ID   int64
-	UID  string
-	Name string
-
-	OrgID int64
-
+type DataSourceDelete struct {
+	ID                      int64
+	UID                     string
+	Name                    string
+	OrgID                   int64
 	DeletedDatasourcesCount int64
-
-	UpdateSecretFn UpdateSecretFn
+	UpdateSecretFn          UpdateSecretFn
 }
 
-// Function for updating secrets along with datasources, to ensure atomicity
+// UpdateSecretFn Function for updating secrets along with datasources, to ensure atomicity
 type UpdateSecretFn func() error
 
 // ---------------------
@@ -434,8 +432,3 @@ type DatasourcesPermissionFilterQuery struct {
 	User        *SignedInUser
 	Datasources []*DataSource
 }
-
-//const (
-//	QuotaTargetSrv quota.TargetSrv = "data_source"
-//	QuotaTarget    quota.Target    = "data_source"
-//)

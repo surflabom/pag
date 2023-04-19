@@ -2,10 +2,11 @@ package pag
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"log"
-	"pag/pkg/grafana"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/surflabom/pag/pkg/grafana"
 )
 
 func TestDataSource(t *testing.T) {
@@ -20,7 +21,7 @@ func TestDataSource(t *testing.T) {
 
 	t.Run("create datasource", func(t *testing.T) {
 
-		DS := grafana.AddDataSourceCommand{
+		DS := grafana.DataSourceAdd{
 			Name:      "Prometheus",
 			Type:      "prometheus",
 			Access:    "proxy",

@@ -8,9 +8,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pag/pkg/prometheus"
 	"strconv"
 	"time"
+
+	"github.com/surflabom/pag/pkg/prometheus"
 )
 
 type PrometheusClient struct {

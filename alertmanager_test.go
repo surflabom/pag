@@ -2,11 +2,12 @@ package pag
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"log"
-	"pag/pkg/alertmanger"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/surflabom/pag/pkg/alertmanger"
 )
 
 func TestAlertmanager(t *testing.T) {

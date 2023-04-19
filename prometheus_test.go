@@ -1,10 +1,11 @@
 package pag
 
 import (
-	"github.com/stretchr/testify/assert"
 	"log"
-	"pag/pkg/prometheus"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/surflabom/pag/pkg/prometheus"
 )
 
 func TestPrometheus(t *testing.T) {
@@ -64,9 +65,5 @@ func TestPrometheus(t *testing.T) {
 		assert.NoError(t, err)
 
 	})
-
-}
-
-func yu() {
 
 }

@@ -7,9 +7,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"pag/pkg/alertmanger"
 	"strconv"
 	"time"
+
+	"github.com/surflabom/pag/pkg/alertmanger"
 )
 
 type AlertmanagerClient struct {
