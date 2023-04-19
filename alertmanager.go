@@ -2,8 +2,10 @@ package pag
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"pag/pkg/alertmanger"
 	"strconv"
@@ -15,148 +17,115 @@ type AlertmanagerClient struct {
 	baseUrl    string
 }
 
-func NewAlertmanagerClient(baseURL string) (*AlertmanagerClient, error) {
-	if baseURL == "" {
-		return nil, errors.New("baseURL 不能为空")
+func NewAlertmanagerClient(config alertmanger.Config) (*AlertmanagerClient, error) {
+	if config.BaseURL == "" {
+		return nil, errors.New("BaseURL  cannot be empty")
 	}
 
-	resp, err := http.Get(baseURL)
+	resp, err := http.Get(config.BaseURL)
 	if err != nil {
 		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New("baseURL 不可用, resp.StatusCode=" + strconv.Itoa(resp.StatusCode))
+		return nil, errors.New("BaseURL is not accessible, responses statusCode=" + strconv.Itoa(resp.StatusCode))
 	}
 
 	return &AlertmanagerClient{
 		httpClient: &http.Client{
 			Timeout: time.Second * 5,
 		},
-		baseUrl: baseURL + "/api/v2",
+		baseUrl: config.BaseURL + "/api/v2",
 	}, nil
 }
 
-func (a *AlertmanagerClient) Status() (alertmanger.Status, error) {
-	resp, err := a.httpClient.Get(a.baseUrl + "/status")
-	if err != nil {
-		return alertmanger.Status{}, err
-	}
-	defer resp.Body.Close() // 关闭响应体
-
-	var status alertmanger.Status
-	return status, json.NewDecoder(resp.Body).Decode(&status)
-
+func (a *AlertmanagerClient) GetReqWithContext(ctx context.Context, url string, i interface{}) error {
+	return a.NewReqWithContext(ctx, "GET", url, nil, i)
 }
 
-func (a *AlertmanagerClient) GetReceivers() ([]alertmanger.Receiver, error) {
-	resp, err := a.httpClient.Get(a.baseUrl + "/receivers ")
+func (a *AlertmanagerClient) NewReqWithContext(ctx context.Context, method string, url string, body io.Reader, i interface{}) error {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := a.httpClient.Do(req)
 	if err != nil {
-		return nil, err
-	}
-
-	var receivers []alertmanger.Receiver
-	return receivers, json.NewDecoder(resp.Body).Decode(&receivers)
-}
-
-// GetAllSilences  从API获取所有静默列表信息
-func (a *AlertmanagerClient) GetAllSilences() ([]alertmanger.Silence, error) {
-	resp, err := a.httpClient.Get(a.baseUrl + "/silences")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close() // 关闭响应体
-
-	var silences []alertmanger.Silence
-	return silences, json.NewDecoder(resp.Body).Decode(&silences)
-}
-
-// NewSilences 创建新的静默信息
-func (a *AlertmanagerClient) NewSilences(silence alertmanger.Silence) (alertmanger.SilenceID, error) {
-	marshal, _ := json.Marshal(silence)
-	resp, err := a.httpClient.Post(a.baseUrl+"/silences", "application/json", bytes.NewBuffer(marshal))
-	if err != nil {
-		return alertmanger.SilenceID{}, err
+		return err
 	}
 	defer resp.Body.Close() // 关闭响应体
 
 	if resp.StatusCode != 200 {
 		var err alertmanger.ResponseError
 		json.NewDecoder(resp.Body).Decode(&err)
-		return alertmanger.SilenceID{}, err
+		return err
 	}
 
+	return json.NewDecoder(resp.Body).Decode(i)
+}
+
+func (a *AlertmanagerClient) Status(ctx context.Context) (alertmanger.Status, error) {
+	var status alertmanger.Status
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/status", &status)
+	return status, err
+}
+
+func (a *AlertmanagerClient) GetReceivers(ctx context.Context) ([]alertmanger.Receiver, error) {
+	var receivers []alertmanger.Receiver
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/receivers", receivers)
+	return receivers, err
+}
+
+// GetAllSilences  从API获取所有静默列表信息
+func (a *AlertmanagerClient) GetAllSilences(ctx context.Context) ([]alertmanger.Silence, error) {
+	var silences []alertmanger.Silence
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/silences", &silences)
+	return silences, err
+
+}
+
+// NewSilences 创建新的静默信息
+func (a *AlertmanagerClient) NewSilences(ctx context.Context, silence alertmanger.Silence) (alertmanger.SilenceID, error) {
+	marshal, _ := json.Marshal(silence)
 	var silenceID alertmanger.SilenceID
-	return silenceID, json.NewDecoder(resp.Body).Decode(&silenceID)
+	err := a.NewReqWithContext(ctx, "POST", a.baseUrl+"/silences", bytes.NewBuffer(marshal), &silenceID)
+	return silenceID, err
 }
 
 // GetSilenceByID 根据ID获取特定的静默信息
-func (a *AlertmanagerClient) GetSilenceByID(id string) (alertmanger.Silence, error) {
-	resp, err := http.DefaultClient.Get(a.baseUrl + "/silence/" + id)
-	if err != nil {
-		return alertmanger.Silence{}, err
-	}
-	defer resp.Body.Close() // 关闭响应体
-
+func (a *AlertmanagerClient) GetSilenceByID(ctx context.Context, id string) (alertmanger.Silence, error) {
 	var silence alertmanger.Silence
-	return silence, json.NewDecoder(resp.Body).Decode(&silence)
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/silence/"+id, &silence)
+	return silence, err
+
 }
 
 // DeleteSilenceByID 根据ID删除特定的静默信息
-func (a *AlertmanagerClient) DeleteSilenceByID(id string) error {
-	request, _ := http.NewRequest("DELETE", a.baseUrl+"/silence/"+id, nil)
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
+func (a *AlertmanagerClient) DeleteSilenceByID(ctx context.Context, id string) error {
+	if err := a.NewReqWithContext(ctx, "DELETE", a.baseUrl+"/silence/"+id, nil, nil); err != io.EOF {
 		return err
 	}
-	defer resp.Body.Close() // 关闭响应体
+	return nil
 
-	if resp.StatusCode != 200 {
-		return errors.New(resp.Status)
-	}
-	return err
 }
 
 // GetAlerts 从API获取所有告警列表信息
-func (a *AlertmanagerClient) GetAlerts() ([]alertmanger.GettableAlert, error) {
-	resp, err := http.DefaultClient.Get(a.baseUrl + "/alerts")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close() // 关闭响应体
-
+func (a *AlertmanagerClient) GetAlerts(ctx context.Context) ([]alertmanger.GettableAlert, error) {
 	var alerts []alertmanger.GettableAlert
-	return alerts, json.NewDecoder(resp.Body).Decode(&alerts)
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/alerts", &alerts)
+	return alerts, err
 }
 
 // NewAlert 创建新的告警信息
-func (a *AlertmanagerClient) NewAlert(alert []alertmanger.Alert) error {
+func (a *AlertmanagerClient) NewAlert(ctx context.Context, alert []alertmanger.Alert) error {
 	marshal, _ := json.Marshal(alert)
-	resp, err := http.DefaultClient.Post(a.baseUrl+"/alerts", "application/json", bytes.NewBuffer(marshal))
-	if err != nil {
+	err := a.NewReqWithContext(ctx, "POST", a.baseUrl+"/alerts", bytes.NewBuffer(marshal), nil)
+	if err != io.EOF {
 		return err
 	}
-	defer resp.Body.Close() // 关闭响应体
-
-	if resp.StatusCode != 200 {
-		return errors.New(resp.Status)
-	}
-	return err
+	return nil
 }
 
 // GetAlertGroup 从API获取所有告警分组信息
-func (a *AlertmanagerClient) GetAlertGroup() ([]alertmanger.GettableAlertGroup, error) {
-	resp, err := http.DefaultClient.Get(a.baseUrl + "/alerts/groups")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close() // 关闭响应体
-
-	if resp.StatusCode != 200 {
-		var err alertmanger.ResponseError
-		return nil, json.NewDecoder(resp.Body).Decode(&err)
-	}
-
+func (a *AlertmanagerClient) GetAlertGroup(ctx context.Context) ([]alertmanger.GettableAlertGroup, error) {
 	var tableAlert []alertmanger.GettableAlertGroup
-	return tableAlert, json.NewDecoder(resp.Body).Decode(&tableAlert)
+	err := a.GetReqWithContext(ctx, a.baseUrl+"/alerts/groups", &tableAlert)
+	return tableAlert, err
 }

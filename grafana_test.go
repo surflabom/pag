@@ -1,6 +1,7 @@
 package pag
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"pag/pkg/grafana"
@@ -8,8 +9,14 @@ import (
 )
 
 func TestDataSource(t *testing.T) {
-	authKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOj"
-	client, _ := NewGrafanaClient(authKey, "http://127.0.0.1:3000")
+	apiKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOj"
+	congfig := grafana.Config{
+		BaseURL: "http://127.0.0.1:3000",
+		ApiKey:  apiKey,
+	}
+
+	client, _ := NewGrafanaClient(congfig)
+	ctx := context.Background()
 
 	t.Run("create datasource", func(t *testing.T) {
 
@@ -22,38 +29,43 @@ func TestDataSource(t *testing.T) {
 			UID:       "6fDMIrLVz",
 			OrgID:     1,
 		}
-		addDataSources, err := client.CreateDataSources(DS)
+		addDataSources, err := client.CreateDataSources(ctx, DS)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, addDataSources)
 	})
 
 	t.Run("get all datasource", func(t *testing.T) {
-		sources, err := client.GetDataSources()
+		sources, err := client.GetDataSources(ctx)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, sources)
 	})
 
 	t.Run("get datasouces by uid", func(t *testing.T) {
-		dataSource, err := client.GetDataSourceByUID("6fDMIrLVz")
+		dataSource, err := client.GetDataSourceByUID(ctx, "6fDMIrLVz")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, dataSource)
 	})
 
 	t.Run("delete datasouce by uid", func(t *testing.T) {
-		err := client.DeleteDataSourceByUID("6fDMIrLVz")
+		err := client.DeleteDataSourceByUID(ctx, "6fDMIrLVz")
 		assert.NoError(t, err)
 	})
 
 	t.Run("Check Datasource Health", func(t *testing.T) {
-		dsh, err := client.CheckDatasourceHealthWithUID("6fDMIrLVz")
+		dsh, err := client.CheckDatasourceHealthWithUID(ctx, "6fDMIrLVz")
 		assert.NoError(t, err)
 		log.Println(dsh)
 	})
 }
 
 func TestDashBoard(t *testing.T) {
-	authKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOj"
-	client, _ := NewGrafanaClient(authKey, "http://127.0.0.1:3000")
+	apiKey := "eyJrIjoiT3hacE5YclNSa29BWnJsemU5TjRndnZTSVZzWWdSY00iLCJuIjoiZGF3IiwiaWQiOj"
+	congfig := grafana.Config{
+		BaseURL: "http://127.0.0.1:3000",
+		ApiKey:  apiKey,
+	}
+	ctx := context.Background()
+	client, _ := NewGrafanaClient(congfig)
 	panelUID := "swtQMN-Vz"
 
 	t.Run("create dashboard", func(t *testing.T) {
@@ -234,20 +246,20 @@ func TestDashBoard(t *testing.T) {
 			Message: "Made changes to xyz",
 		}
 
-		err := client.PostDashBoard(sds)
+		err := client.PostDashBoard(ctx, sds)
 
 		assert.NoError(t, err)
 	})
 
 	t.Run("Get DashBoard", func(t *testing.T) {
-		dashboard, err := client.GetDashBoardByUID(panelUID)
+		dashboard, err := client.GetDashBoardByUID(ctx, panelUID)
 
 		assert.NoError(t, err)
 		assert.NotEmpty(t, dashboard)
 	})
 
 	t.Run("Delete DataSource", func(t *testing.T) {
-		err := client.DeleteDataSourceByUID(panelUID)
+		err := client.DeleteDataSourceByUID(ctx, panelUID)
 		assert.NoError(t, err)
 	})
 }

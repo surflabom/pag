@@ -20,7 +20,7 @@ go get  github.com/surflabom/pag
   package main
 
   import (
-	"pag"
+	"github.com/surflabom/pag"
   )
 
 func main()  {

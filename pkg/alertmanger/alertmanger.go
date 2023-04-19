@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type Config struct {
+	BaseURL string
+}
+
 type SilenceID struct {
 	SilenceID string `json:"silenceID"`
 }

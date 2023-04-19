@@ -24,6 +24,11 @@ const (
 	DS_AZURE_MONITOR  = "grafana-azure-monitor-datasource"
 )
 
+type Config struct {
+	BaseURL string //grafana 服务地址 例如: "http://127.0.0.1:9090"
+	ApiKey  string //身份验证 API Key
+}
+
 type Json struct {
 	Data interface{}
 }

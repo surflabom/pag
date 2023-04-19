@@ -8,14 +8,17 @@ import (
 )
 
 func TestPrometheus(t *testing.T) {
-	client, _ := NewPrometheusClient("http://127.0.0.1:9090", "")
+	var config prometheus.Config
+	config.BaseURL = "http://127.0.0.1"
+	config.TargetConfigPath = ""
+	client, _ := NewPrometheusClient(config)
 	testJobName := "testjob"
 	EndPointAddress := "localhost:9090"
 
 	client.Server(":8090", "/remoteTargets")
 
 	t.Run("Add Prometheus Target", func(t *testing.T) {
-		endpoint := prometheus.Config{
+		endpoint := prometheus.TargetConfig{
 			Targets: []string{},
 			Labels: map[string]string{
 				"Job": testJobName,
@@ -61,5 +64,9 @@ func TestPrometheus(t *testing.T) {
 		assert.NoError(t, err)
 
 	})
+
+}
+
+func yu() {
 
 }

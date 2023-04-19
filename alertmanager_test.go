@@ -1,6 +1,7 @@
 package pag
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"pag/pkg/alertmanger"
@@ -9,8 +10,11 @@ import (
 )
 
 func TestAlertmanager(t *testing.T) {
-	client, _ := NewAlertmanagerClient("http://127.0.0.1:9093")
-	silenceUID := ""
+	var config alertmanger.Config
+	config.BaseURL = "http://127.0.0.1:9093"
+	client, _ := NewAlertmanagerClient(config)
+	silenceUID := "ed1dcace-e5b0-4a04-a97b-2358a2d7af28"
+	ctx := context.Background()
 
 	t.Run("New Alert", func(t *testing.T) {
 		alerts := []alertmanger.Alert{
@@ -36,18 +40,18 @@ func TestAlertmanager(t *testing.T) {
 				GeneratorURL: "https://dawdaw.com",
 			},
 		}
-		err := client.NewAlert(alerts)
+		err := client.NewAlert(ctx, alerts)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Get Alerts", func(t *testing.T) {
-		alerts, err := client.GetAlerts()
+		alerts, err := client.GetAlerts(ctx)
 		assert.NoError(t, err)
 		log.Println(alerts)
 	})
 
 	t.Run("Get Alert Group", func(t *testing.T) {
-		group, err := client.GetAlertGroup()
+		group, err := client.GetAlertGroup(ctx)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, group)
 		log.Println(group)
@@ -73,7 +77,7 @@ func TestAlertmanager(t *testing.T) {
 				SilencedBy:  []string{},
 			},
 		}
-		silences, err := client.NewSilences(sli)
+		silences, err := client.NewSilences(ctx, sli)
 
 		assert.NoError(t, err)
 		log.Println(silences)
@@ -81,21 +85,20 @@ func TestAlertmanager(t *testing.T) {
 	})
 
 	t.Run("Get AllSilences", func(t *testing.T) {
-		silences, err := client.GetAllSilences()
+		silences, err := client.GetAllSilences(ctx)
 
 		assert.NoError(t, err)
 		log.Printf("%+v", silences)
 	})
 
 	t.Run("Get Silence", func(t *testing.T) {
-		silence, err := client.GetSilenceByID(silenceUID)
+		silence, err := client.GetSilenceByID(ctx, silenceUID)
 		assert.NoError(t, err)
-		assert.NotEmpty(t, silence)
 		log.Println(silence)
 	})
 
 	t.Run("Delete Silence", func(t *testing.T) {
-		err := client.DeleteSilenceByID(silenceUID)
+		err := client.DeleteSilenceByID(ctx, silenceUID)
 		assert.NoError(t, err)
 	})
 

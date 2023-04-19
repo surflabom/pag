@@ -18,7 +18,7 @@ func CreateConfig(path string) error {
 	return err
 }
 
-func writeConfig(path string, configs []Config) error {
+func writeConfig(path string, configs []TargetConfig) error {
 	marshal, _ := json.Marshal(configs)
 
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
@@ -31,7 +31,7 @@ func writeConfig(path string, configs []Config) error {
 	return err
 }
 
-func ReadConfigs(path string) ([]Config, error) {
+func ReadConfigs(path string) ([]TargetConfig, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -40,14 +40,14 @@ func ReadConfigs(path string) ([]Config, error) {
 		}
 	}
 
-	var configs []Config
+	var configs []TargetConfig
 	return configs, json.Unmarshal(bytes, &configs)
 }
 
-func ReadConfig(path string, configName string) (Config, error) {
+func ReadConfig(path string, configName string) (TargetConfig, error) {
 	jobs, err := ReadConfigs(path)
 	if err != nil {
-		return Config{}, err
+		return TargetConfig{}, err
 	}
 
 	for _, t := range jobs {
@@ -56,10 +56,10 @@ func ReadConfig(path string, configName string) (Config, error) {
 		}
 	}
 
-	return Config{}, errors.New("未找到")
+	return TargetConfig{}, errors.New("未找到")
 }
 
-func AddConfig(path string, config Config) error {
+func AddConfig(path string, config TargetConfig) error {
 	configs, err := ReadConfigs(path)
 	if err != nil {
 		return err
@@ -123,6 +123,11 @@ func DeleteTarget(path string, target EndPoint) error {
 }
 
 type Config struct {
+	BaseURL          string //prometheus 服务地址 例如: "http://127.0.0.1:9090"
+	TargetConfigPath string //target 配置文件路径 为空则默认在程序根目录下生成`configs.json`作为配置文件
+}
+
+type TargetConfig struct {
 	Targets []string          `json:"targets"`
 	Labels  map[string]string `json:"labels"`
 }

@@ -38,27 +38,27 @@ func (p *PrometheusClient) Server(address, pattern string) {
 	}()
 }
 
-func NewPrometheusClient(baseURL, TargetConfigPath string) (*PrometheusClient, error) {
-	if baseURL == "" {
-		return nil, errors.New("baseURL 不能为空")
+func NewPrometheusClient(config prometheus.Config) (*PrometheusClient, error) {
+	if config.BaseURL == "" {
+		return nil, errors.New("BaseURL cannot be empty")
 	}
 
-	if TargetConfigPath == "" {
-		TargetConfigPath = "configs.json"
+	if config.TargetConfigPath == "" {
+		config.TargetConfigPath = "configs.json"
 	}
 
-	resp, err := http.Get(baseURL)
+	resp, err := http.Get(config.BaseURL)
 	if err != nil {
 		return nil, err
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New("baseURL 不可用, resp.StatusCode=" + strconv.Itoa(resp.StatusCode))
+		return nil, errors.New("BaseURL is not accessible, responses statusCode=" + strconv.Itoa(resp.StatusCode))
 	}
 
-	if _, err := os.Stat(TargetConfigPath); err != nil {
+	if _, err := os.Stat(config.TargetConfigPath); err != nil {
 		if os.IsNotExist(err) {
-			if err := prometheus.CreateConfig(TargetConfigPath); err != nil {
+			if err := prometheus.CreateConfig(config.TargetConfigPath); err != nil {
 				panic(err)
 			}
 		}
@@ -68,21 +68,21 @@ func NewPrometheusClient(baseURL, TargetConfigPath string) (*PrometheusClient, e
 		httpClient: &http.Client{
 			Timeout: time.Second * 5,
 		},
-		baseURL:    baseURL,
-		configPath: TargetConfigPath,
+		baseURL:    config.BaseURL,
+		configPath: config.TargetConfigPath,
 	}, err
 
 }
 
-func (p *PrometheusClient) GetTargetByName(targetName string) (prometheus.Config, error) {
+func (p *PrometheusClient) GetTargetByName(targetName string) (prometheus.TargetConfig, error) {
 	return prometheus.ReadConfig(p.configPath, targetName)
 }
 
-func (p *PrometheusClient) GetAllTarget() ([]prometheus.Config, error) {
+func (p *PrometheusClient) GetAllTarget() ([]prometheus.TargetConfig, error) {
 	return prometheus.ReadConfigs(p.configPath)
 }
 
-func (p *PrometheusClient) AddTarget(config prometheus.Config) error {
+func (p *PrometheusClient) AddTarget(config prometheus.TargetConfig) error {
 	return prometheus.AddConfig(p.configPath, config)
 }
 
