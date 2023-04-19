@@ -122,7 +122,7 @@ slience := alertmanger.Silence{
    
    DataSources, err := grafanaClient.CreateDataSources(DS)
 ```
-
+- 更多示例 **[examples](https://www.example.com)**
 
 
 
