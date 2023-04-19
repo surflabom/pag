@@ -1,4 +1,4 @@
-module pag
+module github.com/surflabom/pag
 
 go 1.19
 
